@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { sign } from "hono/utils/jwt/jwt";
 import { SignatureKey } from "hono/utils/jwt/jws";
+import { JSONArray ,JSONObject,JSONPrimitive} from "hono/utils/types";
+// type InputJsonValue = JSONArray | JSONObject | JSONPrimitive | null |undefined;
 const app = new Hono<{
     Bindings:{
         DATABASE_URL:string,
@@ -39,7 +41,7 @@ export const addExpense = app.post('/addexpense',async (c)=>{
             id : body.id,
             username : body.username || ""
         }
-    })
+    } )
     
     const expense = await prisma.expense.create({
         data:{
@@ -57,12 +59,41 @@ export const addExpense = app.post('/addexpense',async (c)=>{
             username: { in: expense.DivideTo as string[] ?? [] }
         }
     })
-    all.forEach(element => {
-        if(element.username != user?.username){
-        element.MoneyOwe += (expense.Total)/(all.length -1)
+    let u;
+    
+    for(const element of all){
+        if(element.id != user?.id){
+            const name = await prisma.user.findUnique({
+                where : {id : element.id},
+                select : {oweTo:true}
+            }) ;
+            const updateOweto = [
+                ...(Array.isArray(name?.oweTo) ? name?.oweTo : []),
+                {user : user?.username , value:expense.Total/all.length}] as Array<any>;
+            console.log(name)
+        const ele = await prisma.user.update({
+            where:{
+                id : element.id,
+            },
+            data:{
+                MoneyOwe: { increment : expense.Total/(all.length )},
+                oweTo : updateOweto
+            }
+        })}
+        
+    }
+    const updated = await prisma.user.update({
+        where:{
+            id:user?.id,
+        },
+        data:{
+            MoneyLent:{ increment : (expense.Total * (all.length - 1))/all.length},
+            lendTo : all.map(element => ({
+                user: element?.username,
+                value: expense.Total / all.length
+            }))
         }
-        console.log(element)
-    });
+    })
     
     return c.json({msg:"expense created succesfully",all})
 })
