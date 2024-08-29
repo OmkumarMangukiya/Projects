@@ -30,11 +30,12 @@ export const addExpense = app.post('/addexpense',async (c)=>{
     })
 
     const body:{
-        id : string,
+        id : string, 
         username : string,
         Name : string,
         Total : number,
-        DivideTo : string[] 
+        DivideTo : string[],
+        groupId : string 
     } = await c.req.json();
     const user = await prisma.user.findUnique({
         where:{
@@ -48,7 +49,9 @@ export const addExpense = app.post('/addexpense',async (c)=>{
             Name : body.Name,
             createdBy : user?.username || "",
             Total : body.Total,
-            DivideTo : body.DivideTo
+            DivideTo : body.DivideTo,
+            authorId : user?.id,
+            groupId : body.groupId
         }
     })
     if(user){
@@ -60,13 +63,14 @@ export const addExpense = app.post('/addexpense',async (c)=>{
         }
     })
     let u;
-    
+    let x=false;
     for(const element of all){
         if(element.id != user?.id){
             const name = await prisma.user.findUnique({
                 where : {id : element.id},
                 select : {oweTo:true}
             }) ;
+            
             const updateOweto = [
                 ...(Array.isArray(name?.oweTo) ? name?.oweTo : []),
                 {user : user?.username , value:expense.Total/all.length}] as Array<any>;
@@ -80,6 +84,9 @@ export const addExpense = app.post('/addexpense',async (c)=>{
                 oweTo : updateOweto
             }
         })}
+        else{
+            x = true;
+        }
         
     }
     const updated = await prisma.user.update({
@@ -87,12 +94,23 @@ export const addExpense = app.post('/addexpense',async (c)=>{
             id:user?.id,
         },
         data:{
-            MoneyLent:{ increment : (expense.Total * (all.length - 1))/all.length},
+            
+            MoneyLent:{ increment : x ? ((expense.Total) * (all.length-1))/all.length : expense.Total},
             lendTo : all.map(element => ({
                 user: element?.username,
                 value: expense.Total / all.length
             }))
         }
+    })
+    const group = await prisma.group.update({
+    where:{
+        id :body.groupId,
+    } ,
+    data:{
+        TotalSpent:{
+            increment : expense.Total
+        }
+    }       
     })
     
     return c.json({msg:"expense created succesfully",all})
