@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { PrismaClient } from "@prisma/client/edge";
+import { Prisma, PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { sign } from "hono/utils/jwt/jwt";
 import { SignatureKey } from "hono/utils/jwt/jws";
@@ -89,6 +89,14 @@ export const addExpense = app.post('/addexpense',async (c)=>{
         }
         
     }
+    
+    const updatedlenTo: Array<any> = [
+        ...(Array.isArray(user?.lendTo) ? user.lendTo : []),
+        ...all.map(element => ({
+            user: element?.username,
+            value: expense.Total / all.length
+        }))
+    ];
     const updated = await prisma.user.update({
         where:{
             id:user?.id,
@@ -96,10 +104,7 @@ export const addExpense = app.post('/addexpense',async (c)=>{
         data:{
             
             MoneyLent:{ increment : x ? ((expense.Total) * (all.length-1))/all.length : expense.Total},
-            lendTo : all.map(element => ({
-                user: element?.username,
-                value: expense.Total / all.length
-            }))
+            lendTo : updatedlenTo
         }
     })
     const group = await prisma.group.update({
@@ -114,4 +119,37 @@ export const addExpense = app.post('/addexpense',async (c)=>{
     })
     
     return c.json({msg:"expense created succesfully",all})
+})
+
+export const openGroup = app.get('/opengroup',async (c)=>{
+    const prisma = new PrismaClient({
+        datasourceUrl : c.env?.DATABASE_URL 
+     })
+     try{
+        const groups = await prisma.group.findMany();
+        return c.json(groups);
+     }
+     catch(error){
+        console.error(error);
+        return c.status(500);
+     }
+})
+
+export const getGroupById = app.get('/opengroup/:id',async (c)=>{
+    const prisma = new PrismaClient({
+        datasourceUrl : c.env?.DATABASE_URL
+    })
+    const groupId = c.req.param('id');
+    try{
+        const group = await prisma.group.findUnique({
+            where : {id:groupId},
+        })
+        if(!group){
+            return c.status(404);
+        }
+    }
+    catch(error){
+        console.error(error);
+        return c.status(500);
+    }
 })
