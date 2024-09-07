@@ -2,6 +2,8 @@ import { BrowserRouter,Route,Routes } from 'react-router-dom'
 import { Signin } from './pages/Signin'
 import { Signup } from './pages/Signup'
 import Groups from './pages/Groups'
+import CreateGroup from './pages/CreateGroup'
+import AddExpense from './pages/AddExpense'
 import './App.css'
 function App() {
 
@@ -10,9 +12,11 @@ function App() {
       
       <BrowserRouter>
       <Routes >
-        <Route path='/' Component={Signin} ></Route>
+        <Route path='/signin' Component={Signin} ></Route>
         <Route path='/signup' Component={Signup} ></Route>
         <Route path='/groups' Component={Groups}></Route>
+        <Route path='/creategroup' Component={CreateGroup}></Route>
+        <Route path='/addexpense' Component={AddExpense}></Route>
       </Routes>
       </BrowserRouter>
 

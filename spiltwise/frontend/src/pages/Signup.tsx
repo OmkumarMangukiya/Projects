@@ -1,9 +1,11 @@
 import Button from "../components/Button.tsx";
 import Input from "../components/Input.tsx";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
 export const Signup = () => {
+    const navigate = useNavigate();
     const [password,setPassword]=useState("");
     const [username,setUsername]=useState("");
     const [email,setEmail] = useState("");
@@ -47,6 +49,10 @@ export const Signup = () => {
                
                 <div>
                     <Button name="Sign up" click={handleSignUp} />
+                </div>
+                <div className="flex ">
+                <div className="pt-2 pr-2">Already have a account?</div>
+                <button className="pt-2 text-green-500 font-medium" onClick={()=>navigate('/signin')}>Sign In</button>
                 </div>
             </div>
         </div>

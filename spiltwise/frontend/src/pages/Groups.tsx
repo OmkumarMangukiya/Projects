@@ -1,20 +1,17 @@
-import { useState, useEffect} from "react";
-import { useNavigate } from "react-router-dom";
-import Group from "../components/Group.tsx";
-import axios from 'axios';
-import Input from "../components/Input.tsx";
-import Button from "../components/Button.tsx";
-
 interface GroupProps {
     Name: string;
     createdAt: string; 
     TotalSpent: number;
   }
 
-const Groups = () => {
+import Card from "../components/Card";
+  import { useEffect,useState } from "react";
+// import {useNavigate} from "react-router-dom"
+import axios from "axios";
+export default function Component() {
     const[groups,setGroups] = useState<GroupProps[]>([]);
-    const [name, setName] = useState("");
-    const navigate = useNavigate();
+    
+    // const navigate = useNavigate();
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -26,28 +23,23 @@ const Groups = () => {
         }
         fetchData();
     }, []);
-    const handleCreateGroup = async ()=>{
-        axios.post(`http://localhost:8787/api/v1/group/create`, { name })
-            .then(response => {
-                console.log("Sign ucp successful", response);
-                setGroups(prevGroups => [...prevGroups, response.data]);
-                location.reload();
-            })
-            .catch(error => {
-                console.error("There was an error signing up!", error);
-            });
-    }
-    return (
-        <>
-            {groups.map((element: GroupProps) => (
-                <Group name={element.Name}  createdAt={element.createdAt} TotalSpent={element.TotalSpent} />
-            ))}
-            <div className="w-fit flex justify-center">
-            <Input label="Name" type="string" change={(e)=>setName(e.target.value)}></Input>
+      
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Groups</h1>
+      <div className="space-y-4">
+        {groups.map((group) => (
+          <div className="p-4 bg-background border rounded-lg">
+            <div className="flex items-center justify-between">
+              <Card name={group.Name} total={group.TotalSpent} createdAt={group.createdAt}></Card>
+              
             </div>
-            <Button click={handleCreateGroup} name="Create Group"></Button>
-        </>
-    );
+            
+            
+          </div>
+        ))}
+      </div>
+    </div>
+ 
+     )
 }
-
-export default Groups;

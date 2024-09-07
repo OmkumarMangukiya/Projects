@@ -30,7 +30,7 @@ export const addExpense = app.post('/addexpense',async (c)=>{
     })
 
     const body:{
-        id : string, 
+        // id : string, 
         username : string,
         Name : string,
         Total : number,
@@ -39,7 +39,7 @@ export const addExpense = app.post('/addexpense',async (c)=>{
     } = await c.req.json();
     const user = await prisma.user.findUnique({
         where:{
-            id : body.id,
+            // id : body.id,
             username : body.username || ""
         }
     } )
@@ -62,7 +62,6 @@ export const addExpense = app.post('/addexpense',async (c)=>{
             username: { in: expense.DivideTo as string[] ?? [] }
         }
     })
-    let u;
     let x=false;
     for(const element of all){
         if(element.id != user?.id){
@@ -147,6 +146,12 @@ export const getGroupById = app.get('/opengroup/:id',async (c)=>{
         if(!group){
             return c.status(404);
         }
+        const expenses = await prisma.expense.findMany({
+            where : {
+                groupId : group.id
+            }
+        })
+        return c.json(expenses)
     }
     catch(error){
         console.error(error);

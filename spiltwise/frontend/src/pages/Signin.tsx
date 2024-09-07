@@ -1,10 +1,11 @@
-import React from "react";
 import Button from "../components/Button.tsx";
 import Input from "../components/Input.tsx";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 export const Signin = () => {
     // const [email,setEmail]=useState("");
+    const navigate = useNavigate();
     const [password,setPassword]=useState("");
     const [username,setUsername]=useState("");
     const handleSignIn = () => {
@@ -19,7 +20,15 @@ export const Signin = () => {
             });
     };
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-200">
+        <div className="flex justify-around">
+        <div className="bg-blue-100 w-full flex justify-center transition-all hover:shadow-inner text-4xl pt-80 px-60 font-medium" >
+            Splitting Money is now &nbsp;
+            
+                <div className=" text-green-600">
+                    easy
+                </div>
+            </div>
+        <div className="flex items-center w-full justify-center min-h-screen  bg-gray-200 border-s-2 border-black">
             
             <div className="w-full max-w-sm p-8 bg-white rounded-md shadow-md">
                 <div className="flex justify-center text-xl mb-4">
@@ -35,7 +44,11 @@ export const Signin = () => {
                 <div>
                     <Button name="Sign in" click={handleSignIn} />
                 </div>
+                <div className="flex ">
+                <div className="pt-2 pr-2">Don't have account?</div>
+                <button className="pt-2 text-green-500 font-medium" onClick={()=>navigate('/signup')}>Sign Up Now</button>
+                </div>
             </div>
         </div>
-    );
+        </div>  );
 };
