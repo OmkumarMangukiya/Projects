@@ -33,7 +33,8 @@ model Group{
   Name String
   createdAt DateTime @default(now())
   TotalSpent Float
-  Users User[]
+  user User @relation(fields: [userId], references: [id])
+  userId String @default("")
   Expenses Expense[]
 }
 
