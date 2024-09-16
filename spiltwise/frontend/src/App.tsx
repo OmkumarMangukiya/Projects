@@ -4,6 +4,7 @@ import { Signup } from './pages/Signup'
 import Groups from './pages/Groups'
 import CreateGroup from './pages/CreateGroup'
 import AddExpense from './pages/AddExpense'
+import Group from './pages/Group'
 import './App.css'
 function App() {
 
@@ -17,6 +18,7 @@ function App() {
         <Route path='/groups' Component={Groups}></Route>
         <Route path='/creategroup' Component={CreateGroup}></Route>
         <Route path='/addexpense' Component={AddExpense}></Route>
+        <Route path='group' Component={Group} ></Route>
       </Routes>
       </BrowserRouter>
 

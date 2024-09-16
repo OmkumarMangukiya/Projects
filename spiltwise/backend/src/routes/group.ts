@@ -58,7 +58,7 @@ export const addExpense = app.post('/addexpense',async (c)=>{
             username : body.username || ""
         }
     } )
-    
+    body.Total = parseFloat(body.Total.toString());
     const expense = await prisma.expense.create({
         data:{
             Name : body.Name,
@@ -174,11 +174,12 @@ export const openGroup = app.get('/opengroup',async (c)=>{
      }
 })
 
-export const getGroupById = app.get('/opengroup/:id',async (c)=>{
+export const getGroupById = app.get('/opengroup/id',async (c)=>{
     const prisma = new PrismaClient({
         datasourceUrl : c.env?.DATABASE_URL
     })
-    const groupId = c.req.param('id');
+    const groupId = c.req.query('id');
+    console.log(groupId)
     try{
         const group = await prisma.group.findUnique({
             where : {id:groupId},
@@ -191,6 +192,7 @@ export const getGroupById = app.get('/opengroup/:id',async (c)=>{
                 groupId : group.id
             }
         })
+        console.log(expenses)
         return c.json(expenses)
     }
     catch(error){

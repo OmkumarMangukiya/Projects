@@ -2,6 +2,7 @@ interface GroupProps {
     Name: string;
     createdAt: string; 
     TotalSpent: number;
+    id : string;
   }
 
 import Card from "../components/Card";
@@ -37,7 +38,7 @@ export default function Component() {
         {groups.map((group) => (
           <div className="p-4 bg-background border rounded-lg">
             <div className="flex items-center justify-between">
-              <Card name={group.Name} total={group.TotalSpent} createdAt={group.createdAt}></Card>
+              <Card name={group.Name} total={group.TotalSpent} createdAt={group.createdAt} id={group.id} ></Card>
               
             </div>
             
