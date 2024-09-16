@@ -2,7 +2,7 @@
  interface ExpenseProps{
     Name: string;
     createdAt : string;
-    DivideTo : string[];
+    DivideTo : string;
     createdBy : string;
     Total : number;
 }
