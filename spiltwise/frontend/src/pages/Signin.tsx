@@ -8,20 +8,16 @@ export const Signin = () => {
     const navigate = useNavigate();
     const [password,setPassword]=useState("");
     const [username,setUsername]=useState("");
-    const handleSignIn = async () => {
+    const handleSignIn = () => {
+        console.log("run");
         // const apiUrl = import.meta.env.REACT_APP_API_URL;
-         axios.post(`http://localhost:8787/api/v1/user/signin`, { username, password })
+        axios.post(`http://localhost:8787/api/v1/user/signin`, { username, password })
             .then(response => {
                 console.log("Sign in successful", response);
-                const {token} = response.data;
-            localStorage.setItem('token', token);
-            navigate("/groups");
             })
             .catch(error => {
                 console.error("There was an error signing in!", error);
             });
-        
-        
     };
     return (
         <div className="flex justify-around">

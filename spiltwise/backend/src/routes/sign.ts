@@ -54,7 +54,7 @@ export const signin = app.post('/signin',async (c)=>{
             const body =await c.req.json();
             const user = await prisma.user.findUnique({
                 where:{
-                    
+                    id: body.id, // Provide the id property here
                     username : body.username,
                     password : body.password
                 }
@@ -64,9 +64,7 @@ export const signin = app.post('/signin',async (c)=>{
                 return c.json({msg:"user not found"})
 
             }
-            const token = await sign({id : user?.id},c.env.JWT_SECRET);
-            c.res.headers.set('Authorization', `Bearer ${token}`);
-            
-            c.res.headers.set('Set-Cookie', `token=${token}; HttpOnly; Secure`);
+            const token = await sign({username : user?.username},c.env.JWT_SECRET);
+            c.res.headers.set('Set-Cookie', `token=${token}; HttpOnly`);
             return c.json({msg:"signin comppleted ",token,username : user.username})
 })

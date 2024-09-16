@@ -9,7 +9,6 @@ import Card from "../components/Card";
   import { useEffect,useState } from "react";
 // import {useNavigate} from "react-router-dom"
 import axios from "axios";
-import CreateGroup from "./CreateGroup";
 export default function Component() {
     const[groups,setGroups] = useState<GroupProps[]>([]);
     
@@ -17,12 +16,7 @@ export default function Component() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = localStorage.getItem('token');
-                const response = await axios.get("http://localhost:8787/api/v1/group/opengroup", {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                const response = await axios.get("http://localhost:8787/api/v1/group/opengroup");
                 setGroups(response.data);
             } catch (error) {
                 console.error("There was an error fetching the groups!", error);
@@ -46,7 +40,6 @@ export default function Component() {
           </div>
         ))}
       </div>
-      <CreateGroup></CreateGroup>
     </div>
  
      )

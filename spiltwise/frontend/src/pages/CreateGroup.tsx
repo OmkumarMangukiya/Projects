@@ -7,23 +7,15 @@ import { useNavigate } from "react-router-dom";
 const CreateGroup=()=>{
     const [name, setName] = useState("");
     const navigate = useNavigate();
-    const handleCreateGroup = async ()=>{ 
-        try
-            {
-        const token = localStorage.getItem('token');
-                const response = await axios.post("http://localhost:8787/api/v1/group/create", { name }, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-            console.log(response);
-            navigate('/groups')
-        }
-        catch{
-            console.error("Error");
-            
-        }
-            
+    const handleCreateGroup = async ()=>{
+        axios.post(`http://localhost:8787/api/v1/group/create`, { name })
+            .then(response => {
+                console.log(response)
+                navigate('/groups')
+            })
+            .catch(error => {
+                console.error("There was an error signing up!", error);
+            });
     }
     return(<>
         <div className="flex items-center  mx-auto my-80 justify-center flex-col  ">

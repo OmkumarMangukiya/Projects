@@ -1,10 +1,9 @@
 import { Hono } from "hono";
 import { Prisma, PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
-import { sign, verify } from "hono/utils/jwt/jwt";
+import { sign } from "hono/utils/jwt/jwt";
 import { SignatureKey } from "hono/utils/jwt/jws";
 import { JSONArray ,JSONObject,JSONPrimitive} from "hono/utils/types";
-import { jwt } from "hono/jwt";
 // type InputJsonValue = JSONArray | JSONObject | JSONPrimitive | null |undefined;
 const app = new Hono<{
     Bindings:{
@@ -17,24 +16,10 @@ export const createGroup = app.post('/create',async (c)=>{
         datasourceUrl : c.env?.DATABASE_URL
     }).$extends(withAccelerate())
     const body = await c.req.json();
-    const authHeader = c.req.header("authorization");
-    const token = authHeader?.split(' ')[1];
-    if (!token) {
-        c.status(401)
-        return c.json({ msg: 'Token not found' });
-    }
-    let decoded;
-        try {
-            decoded = await verify(token, c.env.JWT_SECRET) as { id: string };
-        } catch (error) {
-            c.status(401);
-            return c.json({ msg: 'Invalid token' });
-        }
     const group = await prisma.group.create({
         data: {
             Name : body.name,
-            TotalSpent : 0,
-            userId: decoded.id,
+            TotalSpent : 0
         }
     })
     return c.json({msg:"group created succefully" , group})
@@ -140,36 +125,11 @@ export const openGroup = app.get('/opengroup',async (c)=>{
         datasourceUrl : c.env?.DATABASE_URL 
      })
      try{
-        const authHeader = c.req.header('Authorization');
-        if (!authHeader) {
-            c.status(401);
-            return c.json({ msg: 'Token Not Found' });
-        }
-        
-        const token = authHeader.split(' ')[1];
-        if (!token) {
-            c.status(401);
-            return c.json({ msg: 'Token not found' });
-        }
-        
-        let decoded;
-        try {
-            decoded = await verify(token, c.env.JWT_SECRET);
-        } catch (error) {
-            c.status(401);
-            return c.json({ msg: 'Invalid token' });
-        }
-        const userId =  (decoded as any)?.id
-        
-        // return c.json(token)
-        const groups = await prisma.group.findMany({
-            where: { userId: userId }
-        });
+        const groups = await prisma.group.findMany();
         return c.json(groups);
      }
      catch(error){
         console.error(error);
-        c.json({msg : "Not found"})
         return c.status(500);
      }
 })
