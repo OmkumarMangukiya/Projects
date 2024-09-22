@@ -15,8 +15,13 @@ export default function Component() {
     // const navigate = useNavigate();
     useEffect(() => {
         const fetchData = async () => {
+          const token = localStorage.getItem('token');
             try {
-                const response = await axios.get("http://localhost:8787/api/v1/group/opengroup");
+                const response = await axios.get("http://localhost:8787/api/v1/group/opengroup",{
+                  headers :{
+                    'token' : `Bearer ${token}`,
+                  }
+                });
                 setGroups(response.data);
             } catch (error) {
                 console.error("There was an error fetching the groups!", error);
@@ -29,10 +34,10 @@ export default function Component() {
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Groups</h1>
       <div className="space-y-4">
-        {groups.map((group) => (
+        {groups.map((group,index) => (
           <div className="p-4 bg-background border rounded-lg">
             <div className="flex items-center justify-between">
-              <Card name={group.Name} total={group.TotalSpent} createdAt={group.createdAt} id={group.id} ></Card>
+              <Card key={index} name={group.Name} total={group.TotalSpent} createdAt={group.createdAt} id={group.id} ></Card>
               
             </div>
             

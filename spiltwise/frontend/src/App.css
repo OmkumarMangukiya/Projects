@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.checked {
+    background-color: #000; /* black background */
+    color: #fff; /* white text */
+    padding: 0.5rem; /* add some padding to make it look nice */
+  }

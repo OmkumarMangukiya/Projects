@@ -3,19 +3,30 @@ import Input from "../components/Input.tsx";
 import Button from "../components/Button.tsx";
 import axios from "axios";
 import { useState} from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 const CreateGroup=()=>{
     const [name, setName] = useState("");
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const handleCreateGroup = async ()=>{
-        axios.post(`http://localhost:8787/api/v1/group/create`, { name })
-            .then(response => {
-                console.log(response)
-                navigate('/groups')
-            })
-            .catch(error => {
-                console.error("There was an error signing up!", error);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('Token not found');
+            return;
+        }
+
+        try {
+            const response = await axios.post('http://localhost:8787/api/v1/group/create', {
+                name
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
+
+            console.log('Group created successfully:', response.data);
+        } catch (error) {
+            console.error('Error creating group:', error);
+        }
     }
     return(<>
         <div className="flex items-center  mx-auto my-80 justify-center flex-col  ">

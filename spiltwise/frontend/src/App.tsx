@@ -6,7 +6,9 @@ import CreateGroup from './pages/CreateGroup'
 import AddExpense from './pages/AddExpense'
 import Group from './pages/Group'
 import './App.css'
+// import dotenv from 'dotenv'
 function App() {
+  // dotenv.config();
 
   return (
     <>

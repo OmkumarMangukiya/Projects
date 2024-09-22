@@ -26,8 +26,12 @@ const Group = () => {
     useEffect(() => {
         const fetchData = async () => {
             const id =  localStorage.getItem('groupId');
-            const response = await axios.get(`http://localhost:36463/api/v1/group/opengroup/id?id=${id}`);
-            setExpense(response.data);
+            if (id) {
+                const response = await axios.get(`http://localhost:8787/api/v1/group/opengroup/id?id=${id}`);
+                setExpense(response.data);
+            } else {
+                console.error("Group ID is not available ");
+            }
         };
 
         fetchData();

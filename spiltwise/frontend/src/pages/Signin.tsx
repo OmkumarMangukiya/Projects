@@ -14,10 +14,12 @@ export const Signin = () => {
         axios.post(`http://localhost:8787/api/v1/user/signin`, { username, password })
             .then(response => {
                 console.log("Sign in successful", response);
+                localStorage.setItem('token',response.data.token)
             })
             .catch(error => {
                 console.error("There was an error signing in!", error);
             });
+            navigate('/groups')
     };
     return (
         <div className="flex justify-around">

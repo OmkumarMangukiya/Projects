@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import {signup , signin} from './routes/sign'
+import {signup , signin,users} from './routes/sign'
 import { createGroup,addExpense } from './routes/group'
 import { cors } from 'hono/cors'
 const app = new Hono<{
@@ -10,6 +10,7 @@ const app = new Hono<{
 app.use('*',cors());
 app.route('api/v1/user', signin)
 app.route('api/v1/user', signup)
+app.route('/api/v1/users',users)
 app.route('api/v1/group',createGroup)
 app.route('api/v1/group',addExpense)
 

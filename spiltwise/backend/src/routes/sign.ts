@@ -28,7 +28,7 @@ export const signup = app.post('/signup',async (c)=>{
             }
         })
    
-    const token:any = await sign({userId:user.id},c.env.JWT_SECRET);
+    const token:any = await sign({userId:user.id,username : user.username},c.env.JWT_SECRET);
     // const cookie = serialize('authToken',token,{
     //     httpOnly: true, // Makes the cookie inaccessible to JavaScript on the client-side
     //         secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
@@ -64,7 +64,14 @@ export const signin = app.post('/signin',async (c)=>{
                 return c.json({msg:"user not found"})
 
             }
-            const token = await sign({username : user?.username},c.env.JWT_SECRET);
+            const token = await sign({userId : user?.id,username : user.username},c.env.JWT_SECRET);
             c.res.headers.set('Set-Cookie', `token=${token}; HttpOnly`);
             return c.json({msg:"signin comppleted ",token,username : user.username})
+})
+export const users = app.get('/',async(c)=>{
+    const prisma = new PrismaClient({
+        datasourceUrl : c.env?.DATABASE_URL
+    }).$extends(withAccelerate())
+    const users = await prisma.user.findMany();
+    return c.json(users)
 })
