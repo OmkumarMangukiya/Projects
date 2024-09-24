@@ -21,16 +21,23 @@ const Group = () => {
     }
 
     const [expense, setExpense] = useState<ExpenseProps[]>([]);
+    // const [isLoading,setisLoading] = useState(true);
     const groupName = localStorage.getItem('groupName');
     // const total = localStorage.getItem('groupTotal');
     useEffect(() => {
         const fetchData = async () => {
             const id =  localStorage.getItem('groupId');
-            if (id) {
-                const response = await axios.get(`http://localhost:8787/api/v1/group/opengroup/id?id=${id}`);
-                setExpense(response.data);
-            } else {
-                console.error("Group ID is not available ");
+            try {
+                if (id) {
+                    const response = await axios.get(`http://localhost:8787/api/v1/group/opengroup/id?id=${id}`);
+                    setExpense(response.data);
+                } else {
+                    console.error("Group ID is not available ");
+                }
+            } catch (error) {
+                console.error("Error fetching data: ", error);
+            } finally {
+                // setisLoading(false);
             }
         };
 
@@ -38,6 +45,7 @@ const Group = () => {
     }, []);
     const navigate = useNavigate();
     return (
+        // isLoading?(<Skeleton count={6} ></Skeleton>):
         <div>
             <div className="text-4xl flex justify-center pb-2 mt-3">{groupName}</div>
             

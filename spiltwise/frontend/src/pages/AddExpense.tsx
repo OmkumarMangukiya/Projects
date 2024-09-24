@@ -4,14 +4,20 @@ import Button from "../components/Button";
 import { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 const AddExpense = ()=>{
-    const[username,setUsername] = useState("");
+    // const[username,setUsername] = useState("");
     const [Name,setName] = useState("");
     const[Total,setTotal] = useState("");
     const [DivideTo,setDivideTo] = useState<string[]>([]);
+    const token = localStorage.getItem('token');
+    // console.log(token)
     const groupId = localStorage.getItem('groupId');
     const navigate = useNavigate();
     const handleOnClick = async()=>{
-        const response = await axios.post('http://localhost:8787/api/v1/group/addexpense',{username,Name,Total,DivideTo,groupId})
+        const response = await axios.post('http://localhost:8787/api/v1/group/addexpense',{Name,Total,DivideTo,groupId},
+            {headers: {
+                'token': `Bearer ${token}`,
+              }}
+        )
         console.log(response)
         navigate('/group')
     }
@@ -42,8 +48,8 @@ const AddExpense = ()=>{
     return (
         <>
             <div className="">
-                <div className="mx-7 mt-60 px-64 pt-6 pb-6 grid grid-cols-1 gap-2">
-                    <Input label="username" type="string" change={(e) => setUsername(e.target.value)}></Input>
+                <div className="mx-80 mt-60 px-64 pt-6 pb-6 grid grid-cols-1 gap-2">
+                    {/* <Input label="username" type="string" change={(e) => setUsername(e.target.value)}></Input> */}
                     <Input label="Expense Name" type="string" change={(e) => setName(e.target.value)}></Input>
                     <Input label="Total" type="number" change={(e) => setTotal(e.target.value)}></Input>
                  
@@ -65,14 +71,14 @@ const AddExpense = ()=>{
                     ))}
                         </select>
                     </div> */}
-     <div className="border-2 border-black p-1 px-10 h-40 overflow-y-auto">
+     <div className="border-2 border-black p-1 px-1 0 h-40 overflow-y-auto  ">
   <label className="block font-medium text-md text-gray-700 pt-2 pb-1 ">Divide To</label>
   <hr className="my-2 border-t-2 border-black w-full pb-2" />
-  <div className="mt-1 grid grid-cols-1 gap-2 pb-2">
+  <div className="mt-1 grid grid-cols-1 gap-2 pb-2 ">
     {users.map((user) => (
       <div
         key={user.id}
-        className={`flex items-center space-x-2 cursor-pointer  ${DivideTo.includes(user.username) ? 'border-2 border-black rounded-lg pl-1' : 'bg-gray-900 text-white rounded-lg pl-2'}`}
+        className={`flex items-center space-x-2 cursor-pointer mb-1 ${DivideTo.includes(user.username) ? 'bg-gray-900 text-white rounded-lg pl-2 p-0.5' : 'border-2 border-black rounded-lg pl-1'}`}
         onClick={() => {
           if (DivideTo.includes(user.username)) {
             setDivideTo(DivideTo.filter((username) => username !== user.username));
