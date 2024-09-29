@@ -19,7 +19,7 @@ export const createGroup = app.post('/create', async (c) => {
     }).$extends(withAccelerate());
 
     const body = await c.req.json();
-    const token = await c.req.header('authorization');
+    const token: string | undefined = await c.req.header('token')?.split(' ')[1];
     // return c.json({msg : `token is ${token}`,token})
 
     if (!token) {
@@ -36,7 +36,7 @@ export const createGroup = app.post('/create', async (c) => {
         return c.json({ msg: "Token verification failed" });
     }
 
-    const userId =  (decoded as any)?.id as string;
+    const userId =  (decoded as any)?.userId as string;
     if (!userId) {
         console.log("User ID not found in token");
         return c.json({ msg: "User ID not found in token" ,decoded});
@@ -46,10 +46,16 @@ export const createGroup = app.post('/create', async (c) => {
         const group = await prisma.group.create({
             data: {
                 Name: body.name,
-                TotalSpent: 0,
-                userId: userId // Include the userId in the data object
+                authorId: userId,
+                TotalSpent: 0, 
+                groupToUser: {
+                    create: {
+                        userId: userId,
+                    }
+                }
             }
         });
+
 
         console.log("Group created successfully:", group);
         return c.json({ msg: "Group created successfully", group });
@@ -59,136 +65,6 @@ export const createGroup = app.post('/create', async (c) => {
         return c.json({ msg: 'Internal Server Error' });
     }
 });
-export const addExpense = app.post('/addexpense',async (c)=>{
-    const prisma = new PrismaClient({
-       datasourceUrl : c.env?.DATABASE_URL 
-    })
-    
-    const body:{
-        // id : string, 
-         
-        Name : string,
-        Total : number,
-        DivideTo : string[],
-        groupId : string 
-    } = await c.req.json();
-    const token: string | undefined = c.req.header('token')?.split(' ')[1];
-    if (!token) {
-        return c.json({ msg: "No token provided" ,token});
-    }
-    
-    
-    let decoded;
-    try {
-        decoded = await verify(token, c.env.JWT_SECRET) ;
-    } catch (error) {
-        console.log("Token verification failed:", error);
-        return c.json({ msg: "Token verification failed" });
-    }
-    
-    const user = await prisma.user.findUnique({
-        where:{
-            // id : body.id,
-            username : (decoded as { username: string }).username 
-        }
-    } )
-    body.Total = parseFloat(body.Total.toString());
-    const expense = await prisma.expense.create({
-        data:{
-            Name : body.Name,
-            createdBy : user?.username || "",
-            Total : body.Total,
-            DivideTo : body.DivideTo,
-            authorId : user?.id,
-            groupId : body.groupId
-        }
-    })
-    if (user) {
-        user.MoneyLent = user.MoneyLent + (expense.Total * 9) / 10
-    }
-    
-    const all = await prisma.user.findMany({
-        where: {
-            username: { in: expense.DivideTo as string[] ?? [] }
-        }
-    })
-    let x = false;
-    for (const element of all) {
-        if (element.id != user?.id) {
-            const name = await prisma.user.findUnique({
-                where: { id: element.id },
-                select: { oweTo: true }
-            });
-    
-            let updateOweto = Array.isArray(name?.oweTo) ? name?.oweTo : [] as Array<any>;
-    
-            // Check if user.username already exists in oweTo array
-            const existingEntryIndex = updateOweto.findIndex((entry: any) => entry.user === user?.username);
-            if (existingEntryIndex !== -1 ) {
-                // Update the existing entry's value
-                if (updateOweto && updateOweto[existingEntryIndex] && updateOweto[existingEntryIndex].username != user?.username) {
-                    updateOweto[existingEntryIndex].value += expense.Total / all.length;
-                }
-            } else {
-                // Add a new entry
-                updateOweto.push({ user: user?.username, value: expense.Total / all.length });
-            }
-    
-            console.log(name);
-            const ele = await prisma.user.update({
-                where: {
-                    id: element.id,
-                },
-                data: {
-                    MoneyOwe: { increment: expense.Total / (all.length) },
-                    oweTo: updateOweto
-                }
-            });
-        } else {
-            x = true;
-        }
-        
-    }
-    
-    const updatedlenTo: Array<any> = Array.isArray(user?.lendTo) ? [...user.lendTo] : [];
-
-all.forEach(element => {
-    const existingEntryIndex = updatedlenTo.findIndex(entry => entry.user === element?.username);
-    if (existingEntryIndex !== -1) {
-        // Update the existing entry's value
-        updatedlenTo[existingEntryIndex].value += expense.Total / all.length;
-    } else {
-        // Add a new entry
-        updatedlenTo.push({
-            user: element?.username,
-            value: expense.Total / all.length
-        });
-    }
-});
-    const updated = await prisma.user.update({
-        where:{
-            id:user?.id,
-        },
-        data:{
-            
-            MoneyLent:{ increment : x ? ((expense.Total) * (all.length-1))/all.length : expense.Total},
-            lendTo : updatedlenTo
-        }
-    })
-    const group = await prisma.group.update({
-    where:{
-        id :body.groupId,
-    } ,
-    data:{
-        TotalSpent:{
-            increment : expense.Total
-        }
-    }       
-    })
-    
-    return c.json({msg:"expense created succesfully",all})
-})
-
 export const openGroup = app.get('/opengroup', async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL
@@ -231,7 +107,7 @@ export const openGroup = app.get('/opengroup', async (c) => {
     try {
         const groups = await prisma.group.findMany({
             where: {
-                userId: userId,
+                authorId: userId,
             }
         });
         console.log(typeof groups);
@@ -268,3 +144,30 @@ export const getGroupById = app.get('/opengroup/id',async (c)=>{
         return c.status(500);
     }
 })
+export const userinGroup = app.get('/users', async (c) => {
+    try {
+        const prisma = new PrismaClient({
+            datasourceUrl: c?.env.DATABASE_URL
+        }).$extends(withAccelerate());
+        const groupId =  c.req.header('groupid');
+        if (!groupId) {
+            return c.json({ error: 'Group ID not found' });
+        }
+        const users = await prisma.user.findMany({
+           where:{
+            groupToUser:{
+                some: {
+                    groupId: groupId
+                }
+            }
+           }
+        });
+
+        console.log(users);
+        return c.json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        c.status(500);
+        return c.json({ error: 'Internal Server Error is there' });
+    }
+});

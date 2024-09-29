@@ -24,7 +24,7 @@ export const signup = app.post('/signup',async (c)=>{
                 MoneyOwe: 0,
                 MoneyLent: 0,
                 lendTo: [],
-                oweTo: []
+                oweTo: [],
             }
         })
    

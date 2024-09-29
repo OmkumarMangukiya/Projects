@@ -38,7 +38,7 @@ export default function Component() {
       <div className="space-y-4">
         {
           groups.map((group, index) => (
-            <div className="p-4 bg-background border rounded-lg" key={index}>
+            <div className="p-4 bg-background border rounded-md shadow-2xl" key={index}>
               <div className="flex items-center justify-between">
                 <Card name={group.Name} total={group.TotalSpent} createdAt={group.createdAt} id={group.id} />
               </div>

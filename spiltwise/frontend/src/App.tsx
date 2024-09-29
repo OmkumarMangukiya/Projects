@@ -21,6 +21,7 @@ function App() {
         <Route path='/creategroup' Component={CreateGroup}></Route>
         <Route path='/addexpense' Component={AddExpense}></Route>
         <Route path='group' Component={Group} ></Route>
+
       </Routes>
       </BrowserRouter>
 

@@ -1,11 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "library"
 }
 
@@ -14,39 +8,52 @@ datasource db {
   url      = env("DIRECT_URL")
 }
 
-model User{
-  id String @default(uuid()) @id
-  createdAt DateTime @default(now())
-  email String
-  username String  @unique
-  password String
-  MoneyOwe Float
+model User {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  email     String
+  username  String    @unique
+  password  String
+  MoneyOwe  Float
   MoneyLent Float
-  Groups Group[]
-  Expenses Expense[]
-  lendTo Json
-  oweTo Json
+  lendTo    Json
+  oweTo     Json
+  Expenses  Expense[]
+  groups    Group[]   @relation("GroupToUser")
+  groupToUser GroupToUser[]
 }
 
-model Group{
-  id String @id @default(uuid())
-  Name String
-  createdAt DateTime @default(now())
+model Group {
+  id         String    @id @default(uuid())
+  createdAt  DateTime  @default(now())
   TotalSpent Float
-  Users User[]
-  Expenses Expense[]
+  Name       String
+  authorId   String
+  Expenses   Expense[]
+  users      User[]    @relation("GroupToUser")
+  groupToUser GroupToUser[]
 }
 
-model Expense{
-  id String @id @default(uuid())
-  Name String
+model Expense {
+  id        String   @id @default(uuid())
+  Name      String
   createdBy String
   createdAt DateTime @default(now())
-  Total Float
-  DivideTo String[]
-  author User @relation(fields:[authorId],references: [id]) 
-  authorId String @default("0")
-  group Group @relation(fields: [groupId], references: [id])
-  groupId String @default("0")
-  
+  Total     Float
+  DivideTo  String[]
+  authorId  String   @default("0")
+  groupId   String   @default("0")
+  Lent      Json
+  Owes      Json
+  author    User     @relation(fields: [authorId], references: [id])
+  group     Group    @relation(fields: [groupId], references: [id])
+}
+
+model GroupToUser {
+  userId  String
+  groupId String
+  user    User   @relation(fields: [userId], references: [id])
+  group   Group  @relation(fields: [groupId], references: [id])
+
+  @@id([userId, groupId])
 }

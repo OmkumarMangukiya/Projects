@@ -19,7 +19,7 @@ const CreateGroup=()=>{
                 name
             }, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'token': `Bearer ${token}`
                 }
             });
 

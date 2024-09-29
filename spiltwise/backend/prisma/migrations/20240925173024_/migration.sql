@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Expense" ADD COLUMN     "Lent" TEXT[] DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN     "Owes" TEXT[] DEFAULT ARRAY[]::TEXT[];
