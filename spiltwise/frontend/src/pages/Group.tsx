@@ -88,7 +88,7 @@ const Group = () => {
                                 <div className="flex justify-center py-7">
                                     <Button
                                         name="Add Expense"
-                                        click={() => navigate('/group')}
+                                        click={() => navigate('/addexpense')}
                                     />
                                 </div>
                             </div>

@@ -106,9 +106,9 @@ export const openGroup = app.get('/opengroup', async (c) => {
     console.log(" user id "+userId);
     try {
         const groups = await prisma.group.findMany({
-            where: {
-                authorId: userId,
-            }
+            // where: {
+            //     authorId: userId,
+            // }
         });
         console.log(typeof groups);
         return c.json(groups);
@@ -171,3 +171,31 @@ export const userinGroup = app.get('/users', async (c) => {
         return c.json({ error: 'Internal Server Error is there' });
     }
 });
+
+export const setUserInGroup = app.post(`/:id/:userId`,async(c)=>{
+    const prisma = new PrismaClient({
+        datasourceUrl: c?.env.DATABASE_URL
+    }).$extends(withAccelerate())
+    const { id, userId } = c.req.param();
+    console.log(id,userId)
+    try{
+        const group = await prisma.group.update({
+            where:{
+                id: id,
+            },
+            data: {
+                groupToUser: {
+                    create: {
+                        userId: userId,
+                    }
+                }
+            }
+        })
+
+        return c.json(group);
+    }
+    catch{
+        c.status(500)
+        return c.json({error: 'Internal Server Error Happened'})
+    }
+})

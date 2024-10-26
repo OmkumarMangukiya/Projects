@@ -66,7 +66,7 @@ export const signin = app.post('/signin',async (c)=>{
             }
             const token = await sign({userId : user?.id,username : user.username},c.env.JWT_SECRET);
             c.res.headers.set('Set-Cookie', `token=${token}; HttpOnly`);
-            return c.json({msg:"signin comppleted ",token,username : user.username})
+            return c.json({msg:"signin comppleted ",token,username : user.username,userId:user.id})
 })
 export const users = app.get('/',async(c)=>{
     const prisma = new PrismaClient({
