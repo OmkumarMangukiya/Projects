@@ -15,6 +15,7 @@ export const Signin = () => {
             .then(response => {
                 console.log("Sign in successful", response);
                 localStorage.setItem('token',response.data.token)
+                localStorage.setItem('userId',response.data.userId)
             })
             .catch(error => {
                 console.error("There was an error signing in!", error);

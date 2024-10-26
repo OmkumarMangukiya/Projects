@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import {signup , signin,users} from './routes/sign'
-import { createGroup ,userinGroup} from './routes/group'
+import { createGroup ,userinGroup,setUserInGroup} from './routes/group'
 import { addExpense } from './routes/expense'
 import { cors } from 'hono/cors'
 const app = new Hono<{
@@ -15,4 +15,5 @@ app.route('/api/v1/users',users)
 app.route('api/v1/group',createGroup)
 app.route('api/v1/group',addExpense)
 app.route('api/v1/group',userinGroup)
+app.route('/api/v1/group',setUserInGroup)
 export default app

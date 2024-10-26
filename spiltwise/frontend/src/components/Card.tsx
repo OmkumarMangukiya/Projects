@@ -1,5 +1,6 @@
 import Button from "./Button";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 export interface CardProps {
     name:string;
     total : number;
@@ -15,6 +16,9 @@ const Card = ({name,total,createdAt,id} : CardProps)=>{
             localStorage.setItem('groupId',id);
             localStorage.setItem('groupName',name);
             localStorage.setItem('groupTotal', total.toString());
+            const userId = localStorage.getItem('userId');
+            const response = await axios.post(`http://localhost:8787/api/v1/group/${id}/${userId}`)
+            console.log(response);
             navigate('/group');
         } catch (error) {
             console.error('Error fetching group data:', error);
