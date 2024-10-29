@@ -178,9 +178,22 @@ export const setUserInGroup = app.post(`/:id/:userId`,async(c)=>{
     }).$extends(withAccelerate())
     const { id, userId } = c.req.param();
     console.log(id,userId)
-    try{
+    try {
+        // Check if the user is already in the group
+        const existingRelation = await prisma.groupToUser.findFirst({
+            where: {
+                groupId: id,
+                userId: userId
+            }
+        });
+
+        if (existingRelation) {
+            return c.json({ msg: "User already exists in the group" });
+        }
+
+        // Add the user to the group
         const group = await prisma.group.update({
-            where:{
+            where: {
                 id: id,
             },
             data: {
@@ -190,9 +203,9 @@ export const setUserInGroup = app.post(`/:id/:userId`,async(c)=>{
                     }
                 }
             }
-        })
+        });
 
-        return c.json(group);
+        return c.json({ msg: "User added to group successfully", group });
     }
     catch{
         c.status(500)
