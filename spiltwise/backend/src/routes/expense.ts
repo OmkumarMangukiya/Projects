@@ -6,6 +6,7 @@ import { SignatureKey } from "hono/utils/jwt/jws";
 import { JSONArray ,JSONObject,JSONPrimitive} from "hono/utils/types";
 import { verify } from "hono/utils/jwt/jwt";
 import { JWTPayload } from "hono/utils/jwt/types";
+import { toASCII } from "punycode";
 // type InputJsonValue = JSONArray | JSONObject | JSONPrimitive | null |undefined;
 const app = new Hono<{
     Bindings:{
@@ -47,12 +48,16 @@ export const addExpense = app.post('/addexpense',async (c)=>{
         }
     } )
     body.Total = parseFloat(body.Total.toString());
+    const updatedDivideTo: { [key: string]: number } = {};
+    body.DivideTo.map((ele)=>{
+        updatedDivideTo[ele] = ((body.Total )/ (body.DivideTo.length))
+    })
     const expense = await prisma.expense.create({
         data:{
             Name : body.Name,
             createdBy : user?.username || "",
             Total : body.Total,
-            DivideTo : body.DivideTo,
+            DivideTo : updatedDivideTo,
             authorId : user?.id,
             groupId : body.groupId,
             Owes : [],
@@ -62,12 +67,13 @@ export const addExpense = app.post('/addexpense',async (c)=>{
     if (user) {
         user.MoneyLent = user.MoneyLent + (expense.Total * 9) / 10
     }
-    
+    console.log('error')
     const all = await prisma.user.findMany({
         where: {
-            username: { in: expense.DivideTo as string[] ?? [] }
+            username: { in: body.DivideTo as string[] }
         }
     })
+    // console.log('not ')
     let checkifUser = false;
     for (const element of all) {
         if (element.id != user?.id) {
@@ -159,3 +165,142 @@ all.forEach(element => {
     return c.json({msg:"expense created succesfully",all})
 })
 
+export const unequalExpense = app.post('/unequalexpense',async(c)=>{
+    const prisma = new PrismaClient({
+        datasourceUrl:c.env?.DATABASE_URL
+    }).$extends(withAccelerate());
+    const body = await c.req.json();
+    const DivideTo = (body.userArr)
+    const name = body.name;
+    const Total = body.Total;
+    const groupid = c.req.header('groupId');
+    const token = c.req.header('token');
+    
+    if (!token) {
+        return c.json({ msg: "No token provided" ,token});
+    }
+    
+    
+    let decoded;
+    try {
+        decoded = await verify(token, c.env.JWT_SECRET) ;
+    } catch (error) {
+        console.log("Token verification failed:", error);
+        return c.json({ msg: "Token verification failed" });
+    }
+    const user = await prisma.user.findUnique({
+        where:{
+            // id : body.id,
+            username : (decoded as { username: string }).username 
+        }
+    } )
+    const expense = await prisma.expense.create({
+        data:{
+            Name : name,
+            createdBy : user?.username || "",
+            Total : Total,
+            DivideTo : DivideTo,
+            authorId : user?.id,
+            groupId : groupid,
+            Owes : [],
+            Lent:  []
+        }
+    })
+    // Check if the user already exists in DivideTo
+    // const DivideTo: { [key: string]: number } = {};
+    // DivideTo.forEach((ele: { user: string, value: number }) => {
+    //     DivideTo[ele.user] = ele.value;
+    // });
+
+    const all = await prisma.user.findMany({
+        where: {
+            username: { in: Object.keys(DivideTo) }
+        }
+    });
+
+    let checkifUser = false;
+    for (const element of all) {
+        if (element.id !== user?.id) {
+            const name = await prisma.user.findUnique({
+                where: { id: element.id },
+                select: { oweTo: true }
+            });
+
+            let updateOweto = Array.isArray(name?.oweTo) ? name?.oweTo : [] as Array<any>;
+
+            // Check if user.username already exists in oweTo array
+            const existingEntryIndex = updateOweto.findIndex((entry: any) => entry.user === user?.username);
+            if (existingEntryIndex !== -1) {
+                // Update the existing entry's value
+                updateOweto[existingEntryIndex].value += DivideTo[element.username];
+            } else {
+                // Add a new entry
+                updateOweto.push({ user: user?.username, value: DivideTo[element.username] });
+            }
+
+            if (!expense.Lent) { expense.Lent = []; }
+            if (!Array.isArray(expense.Lent)) {
+                expense.Lent = [];
+            }
+
+            expense.Lent.push({ user: user?.username || "", value: DivideTo[element.username] });
+
+            await prisma.user.update({
+                where: {
+                    id: element.id,
+                },
+                data: {
+                    MoneyOwe: { increment: DivideTo[element.username] },
+                    oweTo: updateOweto
+                }
+            });
+        } else {
+            checkifUser = true;
+        }
+    }
+
+    const updatedlenTo: Array<any> = Array.isArray(user?.lendTo) ? [...user.lendTo] : [];
+
+    all.forEach(element => {
+        const existingEntryIndex = updatedlenTo.findIndex(entry => entry.user === element?.username);
+        if (existingEntryIndex !== -1) {
+            // Update the existing entry's value
+            updatedlenTo[existingEntryIndex].value += DivideTo[element.username];
+        } else {
+            // Add a new entry
+            updatedlenTo.push({
+                user: element?.username,
+                value: DivideTo[element.username]
+            });
+        }
+
+        if (!expense.Owes) { expense.Owes = []; }
+        if (!Array.isArray(expense.Owes)) {
+            expense.Owes = [];
+        }
+        expense.Owes.push({ user: element?.username, value: DivideTo[element.username] });
+    });
+
+    await prisma.user.update({
+        where: {
+            id: user?.id,
+        },
+        data: {
+            MoneyLent: { increment: checkifUser && user?.username ? (Total - DivideTo[user.username]) : Total },
+            lendTo: updatedlenTo
+        }
+    });
+
+    await prisma.group.update({
+        where: {
+            id: groupid,
+        },
+        data: {
+            TotalSpent: {
+                increment: Total
+            }
+        }
+    });
+
+    return c.json({ msg: "Unequal expense created successfully", all });
+})
