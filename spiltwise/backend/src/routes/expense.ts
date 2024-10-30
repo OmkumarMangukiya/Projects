@@ -304,3 +304,99 @@ export const unequalExpense = app.post('/unequalexpense',async(c)=>{
 
     return c.json({ msg: "Unequal expense created successfully", all });
 })
+
+export const deleteExpense = app.post('/deleteexpense', async (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL
+    }).$extends(withAccelerate());
+
+    const body: {
+        expenseId: string;
+    } = await c.req.json();
+
+    const token: string | undefined = c.req.header('Authorization')?.split(' ')[1];
+    if (!token) {
+        return c.json({ msg: "No token provided", token });
+    }
+
+    let decoded;
+    try {
+        decoded = await verify(token, c.env.JWT_SECRET);
+    } catch (error) {
+        console.log("Token verification failed:", error);
+        return c.json({ msg: "Token verification failed" });
+    }
+
+    const user = await prisma.user.findUnique({
+        where: {
+            username: (decoded as { username: string }).username
+        }
+    });
+
+    if (!user) {
+        return c.json({ msg: "User not found" });
+    }
+
+    const expense = await prisma.expense.findUnique({
+        where: {
+            id: body.expenseId
+        }
+    });
+
+    if (!expense) {
+        return c.json({ msg: "Expense not found" });
+    }
+
+    if (expense.authorId !== user.id) {
+        return c.json({ msg: "User is not authorized to delete this expense" });
+    }
+
+    await prisma.expense.delete({
+        where: {
+            id: body.expenseId
+        }
+    });
+
+    const updatedUsers = await prisma.user.findMany({
+        where: {
+            username: { in: Object.keys(expense.DivideTo as { [key: string]: number }) }
+        }
+    });
+
+    for (const element of updatedUsers) {
+        const updatedOweTo = (element.oweTo as Array<any>).filter((entry: any) => entry.user !== user.username);
+        await prisma.user.update({
+            where: {
+                id: element.id
+            },
+            data: {
+                MoneyOwe: { decrement: (expense.DivideTo as { [key: string]: number })[element.username] },
+                oweTo: updatedOweTo
+            }
+        });
+    }
+
+    const updatedLendTo = (user.lendTo as Array<any>).filter((entry: any) => !Object.keys(expense.DivideTo as { [key: string]: number }).includes(entry.user));
+    await prisma.user.update({
+        where: {
+            id: user.id
+        },
+        data: {
+            MoneyLent: { decrement: expense.Total },
+            lendTo: updatedLendTo
+        }
+    });
+
+    await prisma.group.update({
+        where: {
+            id: expense.groupId
+        },
+        data: {
+            TotalSpent: {
+                decrement: expense.Total
+            }
+        }
+    });
+
+    return c.json({ msg: "Expense deleted successfully" });
+})
